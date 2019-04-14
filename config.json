@@ -1,0 +1,14 @@
+{
+    "application": {
+        "name": "book-service", 
+        "port": ":8000",
+        "version": "1.0.0"
+    },
+    "db": {
+        "name": "postgres",
+        "host": "localhost",
+        "user": "postgres",
+        "pass": "123456"
+    }
+}
+    
