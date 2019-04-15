@@ -1,7 +1,10 @@
 package services
 
 import (
-	"github.com/ruspatrick/go-toff/domain/models"
+	"fmt"
+
+	"github.com/ruspatrick/book-service/domain/models"
+	"github.com/ruspatrick/book-service/infrastructure/errors"
 )
 
 const (
@@ -11,31 +14,42 @@ const (
 	minPublishyear = -1900
 )
 
-func validateBook(book *models.Book) int {
-	var failedValidation int
-	failedValidation += validateTitle(book.Title)
-	failedValidation += validatePages(book.NumberPages)
-	failedValidation += validatePublishYear(book.PublishYear)
-	return failedValidation
+var (
+	ErrIncorrectTitle       = fmt.Errorf("максимально допустимое название 50 символов")
+	ErrIncorrectNumberPages = fmt.Errorf("количество страниц должно быть в диапазоне 0 - 10000 страниц")
+	ErrInvorrectPublishYear = fmt.Errorf("год издания не может быть меньше 1900г до н.э")
+)
+
+func validateBook(book *models.Book) error {
+	if err := validateTitle(book.Title); err != nil {
+		return err
+	}
+	if err := validatePages(book.NumberPages); err != nil {
+		return err
+	}
+	if err := validatePublishYear(book.PublishYear); err != nil {
+		return err
+	}
+	return nil
 }
 
-func validateTitle(title string) int {
+func validateTitle(title string) error {
 	if len(title) > lengthTitle {
-		return 1
+		return errors.CreateBusinessError(ErrIncorrectTitle, ErrIncorrectTitle.Error())
 	}
-	return 0
+	return nil
 }
 
-func validatePages(numberPages int) int {
+func validatePages(numberPages int) error {
 	if numberPages < minPages || numberPages > maxPages {
-		return 1
+		return errors.CreateBusinessError(ErrIncorrectNumberPages, ErrIncorrectNumberPages.Error())
 	}
-	return 0
+	return nil
 }
 
-func validatePublishYear(publishYear int) int {
+func validatePublishYear(publishYear int) error {
 	if publishYear < minPublishyear {
-		return 1
+		return errors.CreateBusinessError(ErrInvorrectPublishYear, ErrInvorrectPublishYear.Error())
 	}
-	return 0
+	return nil
 }

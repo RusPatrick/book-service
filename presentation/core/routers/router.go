@@ -3,7 +3,7 @@ package routers
 import (
 	"net/http"
 
-	"github.com/ruspatrick/go-toff/presentation/controllers"
+	"github.com/ruspatrick/book-service/presentation/controllers"
 )
 
 const (
@@ -13,6 +13,7 @@ const (
 func NewRouter() *http.ServeMux {
 	router := http.NewServeMux()
 
-	router.HandleFunc(apiV1Url+"/books", controllers.BookController)
+	router.HandleFunc(apiV1Url+"/books", controllers.BooksController)
+	router.HandleFunc(apiV1Url+"/books/", controllers.BookController)
 	return router
 }

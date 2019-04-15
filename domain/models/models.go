@@ -13,8 +13,10 @@ type Book struct {
 	PublishYear int    `json:"publish_year"`
 }
 
-type Error struct {
-	Type   string `json:"type"`
-	Title  string `json:"title"`
-	Detail string `json:"detail"`s
+type BooksQuery struct {
+	MinYear  int
+	MaxYear  int
+	SubStr   string
+	MinPages int
+	MaxPages int
 }

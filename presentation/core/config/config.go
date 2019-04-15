@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ruspatrick/go-toff/domain/models"
+	"github.com/ruspatrick/book-service/domain/models"
 )
 
 const (

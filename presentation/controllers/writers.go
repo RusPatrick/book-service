@@ -2,11 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 
-	"github.com/ruspatrick/go-toff/domain/models"
+	"github.com/ruspatrick/book-service/infrastructure/errors"
 )
 
 const (
@@ -15,29 +14,28 @@ const (
 	businessTypeError = "business"
 )
 
-var (
-	errIncorrectId = errors.New("Incorrect book id")
-)
+func writeError(w http.ResponseWriter, err error) {
+	switch v := err.(type) {
+	case errors.Error:
+		log.Printf("%s: %s", v.Source, v.ErrDescription.Error())
 
-func writeServerError(w http.ResponseWriter, title, detail string) {
-	w.WriteHeader(http.StatusInternalServerError)
-	writeError(w, title, detail, serverTypeError)
-}
+		response, errMarshal := json.Marshal(err)
+		if errMarshal != nil {
+			log.Println(errMarshal)
+		}
 
-func writeBusinessError(w http.ResponseWriter, title, detail string) {
-	w.WriteHeader(http.StatusBadRequest)
-	writeError(w, title, detail, businessTypeError)
-}
-
-func writeError(w http.ResponseWriter, title, detail, typeErr string) {
-	response, err := json.Marshal(models.Error{
-		Title:  title,
-		Type:   typeErr,
-		Detail: detail,
-	})
-	if err != nil {
-		log.Println(err)
+		w.WriteHeader(v.StatusCode)
+		w.Write(response)
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(nil)
 	}
+}
 
-	w.Write(response)
+func writeSuccess(w http.ResponseWriter, statusCode int, headers http.Header, body []byte) {
+	for k, v := range headers {
+		w.Header().Add(k, v[0])
+	}
+	w.WriteHeader(statusCode)
+	w.Write(body)
 }

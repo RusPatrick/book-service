@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/ruspatrick/go-toff/application/services"
-	"github.com/ruspatrick/go-toff/presentation/core/config"
-	"github.com/ruspatrick/go-toff/presentation/core/routers"
+	"github.com/ruspatrick/book-service/application/services"
+	"github.com/ruspatrick/book-service/presentation/core/config"
+	"github.com/ruspatrick/book-service/presentation/core/routers"
 )
 
 func init() {

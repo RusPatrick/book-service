@@ -2,26 +2,43 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/ruspatrick/go-toff/application/services"
-	"github.com/ruspatrick/go-toff/domain/models"
+	"github.com/ruspatrick/book-service/application/services"
+	"github.com/ruspatrick/book-service/domain/models"
 )
 
-func BookController(w http.ResponseWriter, req *http.Request) {
+const (
+	errInternalServerErrorMsg = "Внутренняя ошибка сервиса"
+)
+
+func BooksController(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPost:
 		addBook(w, req)
 	case http.MethodGet:
-
+		getBooks(w, req)
 	case http.MethodPatch:
 		modifyBook(w, req)
 	case http.MethodDelete:
 		deleteBook(w, req)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write(nil)
 	}
+}
 
+func BookController(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodGet:
+		getBookByID(w, req)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write(nil)
+	}
 }
 
 func addBook(w http.ResponseWriter, req *http.Request) {
@@ -31,13 +48,26 @@ func addBook(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	services.AddBook(book)
+	if err := services.AddBook(book); err != nil {
+		writeError(w, err)
+		return
+	}
+
+	responseBody, err := marshalJSON(book)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+
+	headers := http.Header{}
+	headers.Add("location", fmt.Sprintf("%s/%d", req.URL.Path, book.ID))
+	writeSuccess(w, http.StatusCreated, headers, responseBody)
 }
 
 func modifyBook(w http.ResponseWriter, req *http.Request) {
 	id, err := getBookID(req.URL.Path)
 	if err != nil {
-		writeBusinessError(w, errTitle, errIncorrectId.Error())
+		writeError(w, err)
 		return
 	}
 
@@ -47,14 +77,71 @@ func modifyBook(w http.ResponseWriter, req *http.Request) {
 	}
 	book.ID = id
 
-	services.ModifyBook(book)
+	if err := services.ModifyBook(book); err != nil {
+		writeError(w, err)
+		return
+	}
 
+	responseBody, err := marshalJSON(book)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+
+	writeSuccess(w, http.StatusOK, nil, responseBody)
 }
 
 func deleteBook(w http.ResponseWriter, req *http.Request) {
+	bookID, err := getBookID(req.URL.Path)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
 
+	if err := services.DeleteBook(bookID); err != nil {
+		writeError(w, err)
+		return
+	}
+
+	writeSuccess(w, http.StatusOK, nil, nil)
+}
+
+func getBooks(w http.ResponseWriter, req *http.Request) {
+	booksQuery := parseQuery(req.URL.Query())
+
+	books, err := services.GetBooks(booksQuery)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+
+	responseBody, err := marshalJSON(books)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeSuccess(w, http.StatusOK, nil, responseBody)
+}
+
+func getBookByID(w http.ResponseWriter, req *http.Request) {
+	id, err := getBookID(req.URL.Path)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	book, err := services.GetBookByID(id)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	responseBody, err := marshalJSON(book)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeSuccess(w, http.StatusOK, nil, responseBody)
 }
 
 func getBookID(idStr string) (int, error) {
-	return strconv.Atoi(strings.TrimPrefix(idStr, "/books/"))
+	return strconv.Atoi(strings.TrimPrefix(idStr, "/api/v1/books/"))
 }
