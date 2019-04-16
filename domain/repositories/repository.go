@@ -10,4 +10,7 @@ type BooksRepository interface {
 	DeleteBook(int) error
 	GetBooksByFilters(subStr string, minPage int, maxPage int, minYaer int, maxYear int) ([]models.Book, error)
 	GetBookByID(id int) (*models.Book, error)
+	RegisterUser(username, passHash, passSalt string) error
+	LoginUser(userInfo models.User) (*models.UserDB, error)
+	SetSession(email, session_id string, exp int64) error
 }

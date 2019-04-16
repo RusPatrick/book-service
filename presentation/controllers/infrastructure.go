@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/url"
 	"strconv"
 
@@ -41,4 +42,12 @@ func parseIntOrSetDefault(str string, defaultValue int) int {
 		return defaultValue
 	}
 	return value
+}
+
+func randStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }

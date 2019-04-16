@@ -1,8 +1,15 @@
 package models
 
 type User struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type UserDB struct {
+	ID       *int64
+	Email    *string
+	PassHash *string
+	PassSalt *string
 }
 
 type Book struct {
@@ -22,5 +29,6 @@ type BooksQuery struct {
 }
 
 type Session struct {
-	ID string `json:"session_id"`
+	ID  string
+	Exp int64
 }

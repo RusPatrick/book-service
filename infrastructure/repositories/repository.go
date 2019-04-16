@@ -7,6 +7,7 @@ import (
 
 	"github.com/ruspatrick/book-service/infrastructure/errors"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"github.com/ruspatrick/book-service/domain/models"
 	"github.com/ruspatrick/book-service/domain/repositories"
@@ -23,11 +24,8 @@ const (
 	ErrDbMsg         = "Ошибка базы данных"
 )
 
-var (
-	booksDB postgres
-)
-
 func InitRepo() repositories.BooksRepository {
+	var booksDB postgres
 	dbCfg := config.Get().DB
 	db, err := sql.Open("postgres", getPostresConnectString(dbCfg.Host, dbCfg.Name, dbCfg.User, dbCfg.Password))
 	if err != nil {
@@ -52,7 +50,7 @@ func InitRepo() repositories.BooksRepository {
 }
 
 func (db *postgres) AddBook(book *models.Book) error {
-	query := `INSERT INTO Books(title, author, pages, publish_year) VALUES 	($1, $2, $3, $4) RETURNING id`
+	query := `INSERT INTO Books(title, author, pages, publish_year) VALUES 	($1, $2, $3, $4) RETURNING id;`
 
 	row := db.DB.QueryRow(query,
 		book.Title,
@@ -69,7 +67,7 @@ func (db *postgres) AddBook(book *models.Book) error {
 }
 
 func (db *postgres) ModifyBook(book *models.Book) error {
-	query := `UPDATE Books SET author=$2, title=$3, pages=$4, publish_year=$5 WHERE id=$1`
+	query := `UPDATE Books SET author=$2, title=$3, pages=$4, publish_year=$5 WHERE id=$1;`
 	_, err := db.DB.Exec(query, book.ID, book.Author, book.Title, book.NumberPages, book.PublishYear)
 	if err != nil {
 		return errors.CreateDbError(err, ErrDbMsg)
@@ -78,7 +76,7 @@ func (db *postgres) ModifyBook(book *models.Book) error {
 }
 
 func (db *postgres) DeleteBook(id int) error {
-	query := `DELETE FROM Books WHERE id=$1`
+	query := `DELETE FROM Books WHERE id=$1;`
 	_, err := db.DB.Exec(query, id)
 	if err != nil {
 		return errors.CreateDbError(err, ErrDbMsg)
@@ -92,7 +90,7 @@ func (db *postgres) GetBooksByFilters(subStr string, minPage int, maxPage int, m
 		(%v is null or pages < %v) and 
 		(%v is null or publish_year > %v) and 
 		(%v is null or publish_year < %v) and 
-		(title ilike '%%%s%%')
+		(title ilike '%%%s%%');
 	`
 	filledQuery := fmt.Sprintf(query, minPage, minPage, maxPage, maxPage, minYaer, minYaer, maxYear, maxYear, subStr)
 	rows, err := db.DB.Query(filledQuery)
@@ -115,7 +113,7 @@ func (db *postgres) GetBooksByFilters(subStr string, minPage int, maxPage int, m
 }
 
 func (db *postgres) GetBookByID(id int) (*models.Book, error) {
-	query := `SELECT id, author, title, publish_year, pages FROM Books WHERE id=$1`
+	query := `SELECT id, author, title, publish_year, pages FROM Books WHERE id=$1;`
 	row := db.DB.QueryRow(query, id)
 	book := models.Book{}
 	if err := row.Scan(&book.ID, &book.Author, &book.Title, &book.PublishYear, &book.NumberPages); err != nil {
@@ -136,7 +134,7 @@ func (db *postgres) createBooksTable() {
 		title varchar(50) not null,
 		pages int not null,
 		publish_year int not null
-	)
+	);
 	`
 
 	if _, err := db.DB.Exec(query); err != nil {
@@ -145,5 +143,47 @@ func (db *postgres) createBooksTable() {
 }
 
 func (db *postgres) createUsersTable() {
+	//TODO
+	db.DB.Exec(`CREATE TABLE IF NOT EXISTS users(
+postgres(# id serial primary key,
+postgres(# email varchar(100) not null unique,
+postgres(# password_hash text not null,
+postgres(# password_salt varchar(20) not null,
+postgres(# session_id varchar(250),
+postgres(# exp int);`)
+}
 
+func (db *postgres) RegisterUser(email, passHash, passSalt string) error {
+	query := `INSERT INTO users(email, password_hash, password_salt) VALUES ($1, $2, $3);`
+
+	_, err := db.DB.Exec(query, email, passHash, passSalt)
+	dbErr := err.(*pq.Error)
+	log.Println(dbErr.Message)
+	if err != nil {
+		return errors.CreateDbError(err, ErrDbMsg)
+	}
+
+	return nil
+}
+
+func (db *postgres) LoginUser(userInfo models.User) (*models.UserDB, error) {
+	query := `SELECT id, email, password_hash, password_salt FROM users WHERE email=$1`
+
+	row := db.DB.QueryRow(query, userInfo.Email)
+	userDTO := models.UserDTO{}
+	if err := row.Scan(&userDTO.ID, &userDTO.Email, &userDTO.PassHash, &userDTO.PassSalt); err != nil {
+		return nil, errors.CreateDbError(err, ErrDbMsg)
+	}
+
+	return userDTO.ToEntity(), nil
+}
+
+func (db *postgres) SetSession(email, session_id string, exp int64) error {
+	query := `UPDATE Users SET session_id=$1, exp=$2 WHERE email=$3`
+
+	if _, err := db.DB.Exec(query, session_id, exp, email); err != nil {
+		return errors.CreateDbError(err, ErrDbMsg)
+	}
+
+	return nil
 }
