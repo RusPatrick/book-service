@@ -20,3 +20,7 @@ type BooksQuery struct {
 	MinPages int
 	MaxPages int
 }
+
+type Session struct {
+	ID string `json:"session_id"`
+}
