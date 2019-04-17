@@ -17,5 +17,6 @@ func NewRouter() *http.ServeMux {
 	router.HandleFunc(apiV1Url+"/books/", controllers.BookController)
 	router.HandleFunc(apiV1Url+"/signup", controllers.Signup)
 	router.HandleFunc(apiV1Url+"/login", controllers.Login)
+	router.HandleFunc(apiV1Url+"/users/", controllers.UserController)
 	return router
 }
