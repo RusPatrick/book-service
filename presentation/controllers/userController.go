@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ruspatrick/book-service/application/services"
@@ -58,4 +60,25 @@ func Login(w http.ResponseWriter, req *http.Request) {
 
 	http.SetCookie(w, cookie)
 	writeSuccess(w, http.StatusOK, nil, []byte("Authorized"))
+}
+
+func UserController(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodGet:
+	case http.MethodDelete:
+		deleteUser(e, req)
+	}
+}
+
+func deleteUser(w http.ResponseWriter, req *http.Request) {
+	userID, err := getUserID(req.URL.Path)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	services.DeleteUser()
+}
+
+func getUserID(str string) (int, error) {
+	return strconv.Atoi(strings.TrimPrefix(str, "/api/v1/users/"))
 }
