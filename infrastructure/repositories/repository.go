@@ -114,17 +114,15 @@ func (db *postgres) GetBooksByFilters(subStr string, minPage int, maxPage int, m
 
 func (db *postgres) GetBookByID(id int) (*models.Book, error) {
 	query := `SELECT id, author, title, publish_year, pages FROM Books WHERE id=$1;`
-	row, err := db.DB.Query(query, id)
-	if err == sql.ErrNoRows {
+	row := db.DB.QueryRow(query, id)
+	bookDTO := models.BookDTO{}
+	if err := row.Scan(&bookDTO.ID, &bookDTO.Author, &bookDTO.Title, &bookDTO.PublishYear, &bookDTO.NumberPages); err != nil {
 		return nil, errors.CreateDbError(err, ErrDbMsg)
 	}
-	book := models.Book{}
-	for row.Next() {
-		if err := row.Scan(&book.ID, &book.Author, &book.Title, &book.PublishYear, &book.NumberPages); err != nil {
-			return nil, errors.CreateDbError(err, ErrDbMsg)
-		}
+	if !bookDTO.ID.Valid {
+		return nil, errors.CreateDbError(nil, ErrNoSuchBook)
 	}
-
+	book := bookDTO.ToEntity()
 	return &book, nil
 }
 
