@@ -59,3 +59,27 @@ func Login(w http.ResponseWriter, req *http.Request) {
 	http.SetCookie(w, cookie)
 	writeSuccess(w, http.StatusOK, nil, []byte("Authorized"))
 }
+
+func Me(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodDelete:
+		deleteUser(w, req)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write(nil)
+	}
+}
+
+func deleteUser(w http.ResponseWriter, req *http.Request) {
+	cookie, err := req.Cookie("session_id")
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	err = services.DeleteUser(cookie.Value)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeSuccess(w, http.StatusOK, nil, nil)
+}

@@ -21,10 +21,6 @@ func BooksController(w http.ResponseWriter, req *http.Request) {
 		addBook(w, req)
 	case http.MethodGet:
 		getBooks(w, req)
-	case http.MethodPatch:
-		modifyBook(w, req)
-	case http.MethodDelete:
-		deleteBook(w, req)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write(nil)
@@ -35,6 +31,10 @@ func BookController(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		getBookByID(w, req)
+	case http.MethodPatch:
+		updateBook(w, req)
+	case http.MethodDelete:
+		deleteBook(w, req)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write(nil)
@@ -64,7 +64,7 @@ func addBook(w http.ResponseWriter, req *http.Request) {
 	writeSuccess(w, http.StatusCreated, headers, responseBody)
 }
 
-func modifyBook(w http.ResponseWriter, req *http.Request) {
+func updateBook(w http.ResponseWriter, req *http.Request) {
 	id, err := getBookID(req.URL.Path)
 	if err != nil {
 		writeError(w, err)
@@ -77,7 +77,7 @@ func modifyBook(w http.ResponseWriter, req *http.Request) {
 	}
 	book.ID = id
 
-	if err := services.ModifyBook(book); err != nil {
+	if err := services.UpdateBook(book); err != nil {
 		writeError(w, err)
 		return
 	}

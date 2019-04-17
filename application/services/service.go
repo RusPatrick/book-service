@@ -1,7 +1,10 @@
 package services
 
 import (
-	"crypto/sha512"
+	"crypto/sha256"
+	"database/sql"
+	"encoding/base64"
+	"log"
 	"net/http"
 	"reflect"
 	"time"
@@ -24,6 +27,10 @@ func Init() {
 	repository = repositories.InitRepo()
 }
 
+func GetDB() *sql.DB {
+	return repository.GetDbConnect()
+}
+
 func AddBook(book *models.Book) error {
 	if err := validateBook(book); err != nil {
 		return err
@@ -31,11 +38,11 @@ func AddBook(book *models.Book) error {
 	return repository.AddBook(book)
 }
 
-func ModifyBook(book *models.Book) error {
+func UpdateBook(book *models.Book) error {
 	if err := validateBook(book); err != nil {
 		return err
 	}
-	return repository.ModifyBook(book)
+	return repository.UpdateBook(book)
 }
 
 func GetBooks(booksQuery models.BooksQuery) ([]models.Book, error) {
@@ -68,7 +75,7 @@ func DeleteBook(bookID int) error {
 
 func Signup(userInfo models.User, salt string) error {
 	passHash := hash(userInfo.Password + salt)
-	return repository.RegisterUser(userInfo.Email, string(passHash), salt)
+	return repository.RegisterUser(userInfo.Email, passHash, salt)
 }
 
 func Login(userInfo models.User) (*http.Cookie, error) {
@@ -76,20 +83,43 @@ func Login(userInfo models.User) (*http.Cookie, error) {
 	if err != nil {
 
 	}
-	if !reflect.DeepEqual(hash(userInfo.Password+*userDB.PassSalt), userDB.PassHash) {
+	curPassHash := hash(userInfo.Password + *userDB.PassSalt)
+	dbPassHash := *userDB.PassHash
+	if !reflect.DeepEqual(curPassHash, dbPassHash) {
 		return nil, errors.CreateBusinessError(err, ErrWrongPassword)
 	}
 
 	session_id := hash(userInfo.Email + *userDB.PassSalt + time.Now().String())
 	exp := time.Now().Add(60 * time.Minute)
-	if err := repository.SetSession(userInfo.Email, session_id, exp.Unix()); err != nil {
+	if err := repository.SetSession(int(*userDB.ID), session_id, exp.Unix()); err != nil {
 		return nil, err
 	}
 	return &http.Cookie{Name: "session_id", Value: session_id, Expires: exp}, nil
 }
 
+func DeleteUser(sessionID string) error {
+	return repository.DeleteUser(sessionID)
+}
+
+func PeriodicalClearSessions() {
+	ticker := time.NewTicker(time.Hour)
+	for _ = range ticker.C {
+		rowsDeleted, err := clearSessions()
+		if err != nil {
+			log.Println("Ошбка при чистке истекших сессий")
+			return
+		}
+		log.Printf("Sessions deleted: %#+v\n", rowsDeleted)
+	}
+}
+
+func clearSessions() (int, error) {
+	currentTime := time.Now().Unix()
+	return repository.ClearSessions(currentTime)
+}
+
 func hash(str string) string {
-	hasher := sha512.New()
+	hasher := sha256.New()
 	hasher.Write([]byte(str))
-	return string(hasher.Sum(nil))
+	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 }

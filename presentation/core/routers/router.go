@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ruspatrick/book-service/presentation/controllers"
+	"github.com/ruspatrick/book-service/presentation/middlewares"
 )
 
 const (
@@ -13,9 +14,10 @@ const (
 func NewRouter() *http.ServeMux {
 	router := http.NewServeMux()
 
-	router.HandleFunc(apiV1Url+"/books", controllers.BooksController)
-	router.HandleFunc(apiV1Url+"/books/", controllers.BookController)
+	router.Handle(apiV1Url+"/books", middlewares.AuthMiddleware(http.HandlerFunc(controllers.BooksController)))
+	router.Handle(apiV1Url+"/books/", middlewares.AuthMiddleware(http.HandlerFunc(controllers.BookController)))
 	router.HandleFunc(apiV1Url+"/signup", controllers.Signup)
 	router.HandleFunc(apiV1Url+"/login", controllers.Login)
+	router.Handle(apiV1Url+"/me", middlewares.AuthMiddleware(http.HandlerFunc(controllers.Me)))
 	return router
 }
