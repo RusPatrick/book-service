@@ -32,12 +32,12 @@ func (db *postgres) LoginUser(userInfo models.User) (*models.UserDB, error) {
 
 	if err := row.Scan(&userDTO.ID, &userDTO.Email, &userDTO.PassHash, &userDTO.PassSalt); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, errors.CreateDbError(ErrNoSuchUser, "Неверный email или пароль")
+			return nil, errors.CreateBusinessError(ErrNoSuchUser, "Неверный email или пароль")
 		}
 		return nil, errors.CreateDbError(err, ErrDbMsg)
 	}
 	if !userDTO.ID.Valid {
-		return nil, errors.CreateDbError(ErrNoSuchUser, ErrNoSuchData)
+		return nil, errors.CreateBusinessError(ErrNoSuchUser, ErrNoSuchData)
 	}
 
 	return userDTO.ToEntity(), nil

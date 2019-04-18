@@ -18,7 +18,7 @@ import (
 
 var (
 	repository       repoI.BooksRepository
-	ErrWrongPassword = fmt.Errorf("Неверный пароль")
+	ErrWrongUserData = fmt.Errorf("Неверный email или пароль")
 )
 
 func Init() {
@@ -84,7 +84,7 @@ func Login(userInfo models.User) (*http.Cookie, error) {
 	curPassHash := hash(userInfo.Password + *userDB.PassSalt)
 	dbPassHash := *userDB.PassHash
 	if !reflect.DeepEqual(curPassHash, dbPassHash) {
-		return nil, errors.CreateBusinessError(ErrWrongPassword, ErrWrongPassword.Error())
+		return nil, errors.CreateBusinessError(ErrWrongUserData, ErrWrongUserData.Error())
 	}
 
 	session_id := hash(userInfo.Email + *userDB.PassSalt + time.Now().String())

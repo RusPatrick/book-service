@@ -20,6 +20,10 @@ func init() {
 }
 
 func Signup(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	userInfo := new(models.User)
 	if err := json.NewDecoder(req.Body).Decode(userInfo); err != nil {
 		writeError(w, err)
@@ -44,6 +48,10 @@ func Signup(w http.ResponseWriter, req *http.Request) {
 }
 
 func Login(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	userInfo := new(models.User)
 	if err := json.NewDecoder(req.Body).Decode(userInfo); err != nil {
 		writeError(w, err)
