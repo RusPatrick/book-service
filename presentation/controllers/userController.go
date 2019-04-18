@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	ErrDifferentPasswords = fmt.Errorf("Неверный email или пароль")
+	ErrDifferentPasswords = fmt.Errorf("Пароли не совпадают")
 )
 
 func init() {
