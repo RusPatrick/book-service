@@ -32,7 +32,6 @@ var (
 func InitRepo() repositories.BooksRepository {
 	dbCfg := config.Get().DB
 	connStr := getPostresConnectString(dbCfg.Host, dbCfg.Port, dbCfg.Name, dbCfg.User, dbCfg.Password)
-	log.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(ErrDbConnectText, err)
