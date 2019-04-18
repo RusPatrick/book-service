@@ -2,23 +2,17 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/ruspatrick/book-service/application/services"
 	"github.com/ruspatrick/book-service/domain/models"
-	"github.com/ruspatrick/book-service/infrastructure/errors"
 )
 
 const (
 	maxLengthSalt = 13
 	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-)
-
-var (
-	ErrDifferentPasswords = fmt.Errorf("Пароли не совпадают")
 )
 
 func init() {
@@ -29,11 +23,6 @@ func Signup(w http.ResponseWriter, req *http.Request) {
 	userInfo := new(models.User)
 	if err := json.NewDecoder(req.Body).Decode(userInfo); err != nil {
 		writeError(w, err)
-		return
-	}
-
-	if userInfo.Password != userInfo.ConfirmPassword {
-		writeError(w, errors.CreateBusinessError(ErrDifferentPasswords, ErrDifferentPasswords.Error()))
 		return
 	}
 

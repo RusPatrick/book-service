@@ -232,6 +232,8 @@ paths:
       responses:
         200:
           description: "аккаунт успешно удален"
+        400:
+          description: "Неверный email или пароль"
         500:
           description: "Внутренняя ошибка сервиса"
           schema:
@@ -243,8 +245,6 @@ definitions:
       email:
         type: "string"
       password:
-        type: "string"
-      confirm_password:
         type: "string"
     xml:
       name: "User"
