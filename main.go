@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/ruspatrick/book-service/application/services"
@@ -16,5 +17,5 @@ func init() {
 func main() {
 	r := routers.NewRouter()
 	go services.PeriodicalClearSessions()
-	http.ListenAndServe(config.Get().App.Port, r)
+	log.Fatal(http.ListenAndServe(config.Get().App.Port, r))
 }
