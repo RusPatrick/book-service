@@ -54,19 +54,9 @@ func (db *postgres) SetSession(userID int, sessionID string, exp int64) error {
 }
 
 func (db *postgres) DeleteUser(sessionID string) error {
-	selectQuery := `SELECT DISTINCT user_id FROM books.sessions WHERE session_id=$1`
-
-	row := db.DB.QueryRow(selectQuery, sessionID)
-	var userID int
-	if err := row.Scan(&userID); err != nil {
-		return err
-	}
-
-	deleteQuery := `DELETE FROM books.users WHERE id=$1 returning id`
-	row = db.DB.QueryRow(deleteQuery, userID)
-
-	if err := row.Scan(&userID); err != nil {
-		return err
+	deleteQuery := `DELETE FROM books.users WHERE id=(SELECT id FROM books.sessions WHERE session_id=$1)`
+	if _, err := db.DB.Exec(deleteQuery, sessionID); err != nil {
+		return errors.CreateDbError(err, ErrDbMsg)
 	}
 	return nil
 }
