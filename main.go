@@ -15,5 +15,6 @@ func init() {
 
 func main() {
 	r := routers.NewRouter()
+	go services.PeriodicalClearSessions()
 	http.ListenAndServe(config.Get().App.Port, r)
 }

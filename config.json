@@ -5,10 +5,11 @@
         "version": "1.0.0"
     },
     "db": {
-        "name": "postgres",
-        "host": "localhost",
-        "user": "postgres",
-        "pass": "123456"
+        "name": "docker",
+        "host": "db",
+        "port": "5432",
+        "user": "docker_user",
+        "pass": "docker"
     }
 }
     
