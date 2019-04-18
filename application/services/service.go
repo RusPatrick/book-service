@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -15,12 +16,9 @@ import (
 	"github.com/ruspatrick/book-service/infrastructure/repositories"
 )
 
-const (
-	ErrWrongPassword = "Неверный пароль"
-)
-
 var (
-	repository repoI.BooksRepository
+	repository       repoI.BooksRepository
+	ErrWrongPassword = fmt.Errorf("Неверный пароль")
 )
 
 func Init() {
@@ -81,12 +79,12 @@ func Signup(userInfo models.User, salt string) error {
 func Login(userInfo models.User) (*http.Cookie, error) {
 	userDB, err := repository.LoginUser(userInfo)
 	if err != nil {
-
+		return nil, err
 	}
 	curPassHash := hash(userInfo.Password + *userDB.PassSalt)
 	dbPassHash := *userDB.PassHash
 	if !reflect.DeepEqual(curPassHash, dbPassHash) {
-		return nil, errors.CreateBusinessError(err, ErrWrongPassword)
+		return nil, errors.CreateBusinessError(ErrWrongPassword, ErrWrongPassword.Error())
 	}
 
 	session_id := hash(userInfo.Email + *userDB.PassSalt + time.Now().String())

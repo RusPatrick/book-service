@@ -17,7 +17,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		query := `SELECT session_id, exp FROM sessions WHERE session_id=$1`
+		query := `SELECT session_id, exp FROM books.sessions WHERE session_id=$1`
 		db := services.GetDB()
 		row := db.QueryRow(query, cookie.Value)
 		var session models.Session
