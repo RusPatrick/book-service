@@ -5,7 +5,7 @@
 Документация API: `swagger.yaml`  
 
 **Ссылка на swaggerhub:**   
-`https://app.swaggerhub.com/apis-docs/RusPatrick/books-service/1.0.0`
+https://app.swaggerhub.com/apis-docs/RusPatrick/books-service/1.0.0
 
 ### Для сборки локального контейнера  
     docker-compose build  
